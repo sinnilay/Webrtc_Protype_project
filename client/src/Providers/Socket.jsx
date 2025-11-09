@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 const Socketcontext = React.createContext(null)
 
 export const Socketprovider=(props)=>{
-    const socket = useMemo(()=>io("http://localhost:7401"))
+    // const socket = useMemo(()=>io("http://localhost:7401"))
+    const socket = useMemo(()=>io("https://webrtc-protype-project.onrender.com/"))
     const name="nilay"
     return(
         <Socketcontext.Provider value={{socket}}>

@@ -68,11 +68,8 @@ const sockettoemailmapping = new Map();
 
 const app = express();
 app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://webrtc-protype-project-b7df1wkbi-nilay-singhs-projects.vercel.app"
-    ],
+   cors({
+    origin: "*",
     methods: ["GET", "POST"],
   })
 );
@@ -81,10 +78,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-     origin: [
-      "http://localhost:5173",
-      "https://webrtc-protype-project-b7df1wkbi-nilay-singhs-projects.vercel.app"
-    ],
+     origin: "*",
     methods: ["GET", "POST"],
   },
 });

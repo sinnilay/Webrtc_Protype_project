@@ -92,7 +92,7 @@ export const PeerProvider = (props) => {
 
   const [remotestream, setremotestream] = useState(null);
   const [remoteEmail, setRemoteEmail] = useState(null);
-
+  const [remoteScreenStream, setRemoteScreenStream] = useState(null);
   // 🔹 ICE Candidate found locally
   useEffect(() => {
     Peer.onicecandidate = (event) => {
@@ -143,6 +143,13 @@ export const PeerProvider = (props) => {
   };
 
   const handletrackevent = useCallback((ev) => {
+        const stream = ev.streams[0];
+
+  // If it's screen share (video only)
+  if (stream.getVideoTracks().length === 1 && stream.getAudioTracks().length === 0) {
+    setRemoteScreenStream(stream);
+    return
+  }
     setremotestream(ev.streams[0]);
   }, []);
 
@@ -163,6 +170,7 @@ export const PeerProvider = (props) => {
         sendstream,
         remotestream,
         setRemoteEmail,
+        remoteScreenStream
       }}
     >
       {props.children}

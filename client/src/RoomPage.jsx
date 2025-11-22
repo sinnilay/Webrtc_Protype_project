@@ -287,6 +287,11 @@ import { usePeer } from './Providers/Peer';
 import './RoomPage.css'; // 👈 Importing CSS file
 
 function RoomPage() {
+    const [screenStream, setScreenStream] = useState(null);
+
+
+ const localScreenRef = useRef(null);
+ const remoteScreenRef = useRef(null);
   const { roomId } = useParams();
   const { socket } = useSocket();
   const {
@@ -296,6 +301,7 @@ function RoomPage() {
     setRemoteans,
     sendstream,
     remotestream,
+    remoteScreenStream
   } = usePeer();
 
   const [remoteEmail, setremoteEmail] = useState(null);
@@ -303,6 +309,48 @@ function RoomPage() {
 
   const videoRef = useRef(null);
   const remotevideoref = useRef(null);
+  const handleShareScreen = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false
+    });
+
+    setScreenStream(stream);
+
+    // Show my own screen locally
+    if (localScreenRef.current) {
+      localScreenRef.current.srcObject = stream;
+    }
+
+    // Add screen tracks to peer connection
+    stream.getTracks().forEach(track => {
+      Peer.addTrack(track, stream);
+    });
+
+    // If user presses browser "Stop sharing"
+    stream.getVideoTracks()[0].onended = () => {
+      stopScreenShare();
+    };
+
+  } catch (err) {
+    console.log("Screen share error", err);
+  }
+};
+
+const stopScreenShare = () => {
+  if (!screenStream) return;
+
+  // Stop tracks
+  screenStream.getTracks().forEach(t => t.stop());
+
+  // Remove local screen preview
+  if (localScreenRef.current) {
+    localScreenRef.current.srcObject = null;
+  }
+
+  setScreenStream(null);
+};
 
   useEffect(() => {
     if (videoRef.current && mystream) {
@@ -314,7 +362,10 @@ function RoomPage() {
     if (remotevideoref.current && remotestream) {
       remotevideoref.current.srcObject = remotestream;
     }
-  }, [remotestream]);
+    if (remoteScreenStream && remoteScreenRef.current) {
+    remoteScreenRef.current.srcObject = remoteScreenStream;
+  }
+  }, [remotestream,remoteScreenStream]);
 
   const handleNewUserJoined = useCallback(async (data) => {
     const { email } = data;
@@ -423,12 +474,51 @@ function RoomPage() {
             <p className="video-label">Remote</p>
           </div>
         </div>
+                <br />
+        <br />
+<div
+  id="video-wrapper"
+  style={{ position: "relative", width: "800px" }}
+>
+  <video
+    ref={remoteScreenRef}
+    autoPlay
+    playsInline
+    style={{
+      width: "100%",
+      height: "100%",
+      objectFit: "contain",
+    }}
+  />
+
+ 
+    {remoteScreenStream ?  <button
+    onClick={() => {
+      document.getElementById("video-wrapper").requestFullscreen();
+    }}
+    style={{
+      position: "absolute",
+      bottom: "10px",
+      right: "10px",
+      padding: "8px 12px",
+      background: "rgba(0, 0, 0, 0.5)",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      cursor: "pointer",
+    }}
+  >⛶</button> : ""}
+  
+</div>
+
       </main>
 
       <footer className="controls">
         <button onClick={() => sendstream(mystream)} className="control-btn">
           🎥 Send My Video
         </button>
+        <br />
+        <button onClick={handleShareScreen}>SHARE SCREEN</button>
       </footer>
     </div>
   );
